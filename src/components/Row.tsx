@@ -6,6 +6,7 @@
 */
 
 import { State } from "../types/Board";
+import Tile from "./Tile";
 
 type RowProps = {
   row: Array<State>;
@@ -15,9 +16,10 @@ type RowProps = {
 
 export const Row = (props: RowProps) => {
   const { row, y, moveHandler } = props;
+
   return(
     <div className="flexContainer">
-      {row.map((tile, i) => <div className="flexContainer flexCentre" onClick={() => {moveHandler(i, y) }}>{tile}</div>)}
+      {row.map((value, x) => <Tile value={value} x={x} y={y} tileClickHandler={moveHandler} />)}
     </div>
   )
 }

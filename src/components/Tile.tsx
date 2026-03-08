@@ -8,5 +8,12 @@ type TileProps = {
 } 
 
 const Tile = (props: TileProps) => {
-  
+  const { value, x, y, tileClickHandler } = props;
+  return(
+    <div className="flexContainer flexCentre" onClick={() => tileClickHandler(x, y)}>
+      {value}
+    </div>
+  )
 }
+
+export default Tile;
