@@ -1,6 +1,24 @@
+svg {
+  position: relative;
+  animation: fadeInLoad 0.1s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadeInLoad {
+  from {
+    opacity: 0;
+
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .flexContainer {
   display: flex;
   flex: 1;
+  flex-shrink: 0;
+  position: relative;
 }
 
 .flexCentre {
@@ -14,5 +32,68 @@
 
 .squareFill {
   max-width: min(100vh, 100vw);
-  max-height: min(100vh, 100vw);
+  height: min(100vh, 100vw);
+}
+
+.content {
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;   
+  right: 0; 
+  bottom: 0;
+  left: 0;  
+  transition: opacity 0.1s ease-in-out;
+  align-items: center;
+  background-color: rgba(218, 218, 218, 0.2);
+  border-radius: 5px;
+}
+
+.overlay svg {
+  animation: fadeInLoad 1s ease-in-out;
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+.layer {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  border-radius: 5px;
+  transition: opacity 1s ease-in-out;
+}
+
+.empty {
+  background-color: rgb(255, 255, 255, 0);
+  opacity: 0;
+  height: 0;
+}
+
+.naughtsLayer {
+  background-color: rgb(0, 133, 214);
+  opacity: 0.2;
+}
+
+.crossesLayer {
+  background-color: rgb(236, 75, 75);
+  opacity: 0.2;
+}
+
+.tieLayer {
+  background-color: rgb(249, 186, 16);
+  opacity: 0.2;
+}
+
+.tileHover:hover {
+  background-color: rgb(255, 255, 255, 0.05);
+  border-radius: 5px;
+}
+
+@media (prefers-color-scheme: light) {
+  .overlay {
+    background-color: rgba(26, 26, 26, 0.2);
+  }
 }
