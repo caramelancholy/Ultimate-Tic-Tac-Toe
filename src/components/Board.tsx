@@ -18,7 +18,8 @@
 import { Player, State, Winner, type BoardState } from "../types/Board";
 import Grid from "./Grid";
 import Tile from "./Tile";
-import { checkWinner, generateOverlayContent } from "../utils/utils.tsx";
+import { checkWinner } from "../utils/utils.tsx";
+import Overlay from "./Overlay.tsx";
 
 type BoardProps = {
   boardState: BoardState;
@@ -50,24 +51,19 @@ export const Board = (props: BoardProps) => {
     )
   } 
 
-  const tiles = board.map((row, y) => row.map((state, x) => <Tile value={state} enabled={enabled} x={x} y={y} tileClickHandler={handleMove}/>))
-
-  const { component, className } = generateOverlayContent(winner);
+  const tiles = board.map((row, y) => row.map((state, x) => <Tile value={state} enabled={enabled} x={x} y={y} tileClickHandler={handleMove}/>));
 
   return(
     <div className="flexContainer" style={{position: 'relative'}}>
       <Grid 
         items={tiles} 
-        lineThickness={2} 
+        lineThickness={0.5}
         lineColourLight="rgba(0, 0, 0, 0.70)" 
         lineColourDark="rgba(255, 255, 255, 0.78)" 
-        padding={6} 
+        padding={1} 
         className="content"
       />
-      <div className={`overlay${winner === Winner.NONE && enabled ? ' empty' : ''}`}>
-        <div className={`layer ${className}`}/>
-        {component}
-      </div>
+      <Overlay winner={winner} enabled={enabled} />
     </div>
   );
 } 

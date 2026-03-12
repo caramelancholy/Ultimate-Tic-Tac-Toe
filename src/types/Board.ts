@@ -17,15 +17,15 @@ export type Player = typeof Player[keyof typeof Player];
 export type State = typeof State[keyof typeof State];
 export type Winner = typeof Winner[keyof typeof Winner];
 
-export interface BoardState {
-  board: State[][];
+export interface IBoardState { 
   winner: Winner;
   enabled: boolean;
+}
+
+export interface BoardState extends IBoardState {
+  board: State[][];
 }  
 
-export interface UltBoardState{
-  boards: BoardState[][],
-  winner: Winner,
-  enabled: boolean,
-  
+export interface UltBoardState extends IBoardState {
+  boards: BoardState[][];
 }

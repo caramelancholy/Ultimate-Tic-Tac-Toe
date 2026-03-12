@@ -1,7 +1,4 @@
 import { type BoardState, Winner, State } from "../types/Board";
-import Naughts from "../assets/naughts.svg?react";
-import Crosses from "../assets/crosses.svg?react";
-import Tie from "../assets/tie.svg?react";
 
 export const checkWinner = (b: BoardState["board"] | Winner[][]): Winner => {
   //Check Straights
@@ -22,12 +19,3 @@ export const checkWinner = (b: BoardState["board"] | Winner[][]): Winner => {
   //If none of the above conditions match, the game is a tie
   return Winner.TIE;
 }
-
-export const generateOverlayContent = (winner: Winner) => {
-      switch(winner) {
-        case Winner.NONE: return({ component: <></>, className: 'empty'});
-        case Winner.NAUGHTS: return({ component: <Naughts/>, className: 'naughtsLayer'});
-        case Winner.CROSSES: return({ component: <Crosses/>, className: 'crossesLayer'});
-        case Winner.TIE: return({ component: <Tie/>, className: 'tieLayer'});
-      }
-  }

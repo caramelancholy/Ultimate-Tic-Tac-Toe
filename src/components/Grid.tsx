@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 
 type GridProps = {
   items: (ReactNode)[][];
-  lineThickness: number;
+  lineThickness: number; // vmin units
   lineColourDark: string;
   lineColourLight: string;
-  padding: number;
+  padding: number; // vmin units
   className?: string;
 }
 
@@ -16,12 +16,12 @@ const Grid = (props: GridProps) => {
   const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   const styles = {
-    boxShadow: `0px 0px 0px ${lineThickness}px ${isDarkMode ? lineColourDark : lineColourLight} inset`,
-    padding: `${padding}px`
+    boxShadow: `0px 0px 0px ${lineThickness}vmin ${isDarkMode ? lineColourDark : lineColourLight} inset`,
+    padding: `${padding}vmin`
   }
 
   return (
-    <div className={`flexContainer ${className}`} style={{ clipPath:`inset(${lineThickness + 1}px)`, flexDirection: 'column' }}>
+    <div className={`flexContainer ${className}`} style={{ clipPath:`inset(${lineThickness + 0.3}vmin)`, flexDirection: 'column' }}>
         {items.map((row , y) => 
             <div className="flexContainer" key={y}>
               {row.map((e, x) => 
