@@ -1,9 +1,9 @@
-import { State } from "../types/Board";
+import { TileState } from "../types/Board";
 import Naughts from '../assets/naughts.svg?react';
 import Crosses from '../assets/crosses.svg?react';
 
 type TileProps = {
-  value: State;
+  value: TileState;
   enabled: boolean;
   x: number;
   y: number;
@@ -13,9 +13,9 @@ type TileProps = {
 const Tile = (props: TileProps) => {
   const { value, x, y, tileClickHandler } = props;
   return(
-    <div className={`flexContainer flexCentre ${value == State.NONE ? 'tileHover' : ''}`} style={{height: '100%'}} onClick={() => tileClickHandler(x, y)}>
-      {value === State.NAUGHTS && <Naughts/>}
-      {value === State.CROSSES && <Crosses/>}
+    <div className={`flexContainer flexCentre ${value == TileState.NONE ? 'tileHover' : ''}`} style={{height: '100%'}} onClick={() => tileClickHandler(x, y)}>
+      {value === TileState.NAUGHTS && <Naughts/>}
+      {value === TileState.CROSSES && <Crosses/>}
     </div>
   )
 }

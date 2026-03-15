@@ -1,31 +1,38 @@
-import { Winner } from "../types/Board";
+import { WinnerType } from "../types/Board";
 import Naughts from "../assets/naughts.svg?react";
 import Crosses from "../assets/crosses.svg?react";
 import Tie from "../assets/tie.svg?react";
 
 type OverlayProps = {
-  winner: Winner,
-  enabled: boolean
+  winner: WinnerType,
+  enabled: boolean,
+  locked: boolean
 }
 
 const Overlay = (props: OverlayProps) => {
-  const { winner, enabled } = props;
+  const { winner, enabled, locked } = props;
 
-  const generateOverlayContent = (winner: Winner) => {
+  const generateOverlayContent = (winner: WinnerType) => {
     switch(winner) {
-      case Winner.NONE: return({ component: <></>, className: 'empty'});
-      case Winner.NAUGHTS: return({ component: <Naughts/>, className: 'naughtsLayer'});
-      case Winner.CROSSES: return({ component: <Crosses/>, className: 'crossesLayer'});
-      case Winner.TIE: return({ component: <Tie/>, className: 'tieLayer'});
+      case WinnerType.NONE: return({ component: <></>, className: ''});
+      case WinnerType.NAUGHTS: return({ component: <Naughts/>, className: 'naughtsLayer'});
+      case WinnerType.CROSSES: return({ component: <Crosses/>, className: 'crossesLayer'});
+      case WinnerType.TIE: return({ component: <Tie/>, className: 'tieLayer'});
     }
   }
 
-  const { component, className } = generateOverlayContent(winner)
+  let { component, className } = generateOverlayContent(winner)
+
+
 
   return(
-    <div className={`overlay${winner === Winner.NONE && enabled ? ' empty' : ''}`}>
-      <div className={`layer ${className}`}/>
-      {component}
+    <div className={`overlay${winner === WinnerType.NONE && enabled && !locked ? ' empty' : ''}${locked ? ' overlayClear' : '' }`}>
+      {!locked && 
+        <>
+          <div className={`layer ${className}`}/>
+          {component}
+        </>
+      }
     </div>
   )
 }

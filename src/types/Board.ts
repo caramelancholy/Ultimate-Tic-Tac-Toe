@@ -1,29 +1,29 @@
-export const Player = {
+export const PlayerType = {
   NAUGHTS: 0,
   CROSSES: 1
 } as const;
 
-export const State = {
+export const TileState = {
   NONE: -1,
-  ...Player,
+  ...PlayerType,
 } as const;
 
-export const Winner = {
-  ...State,
+export const WinnerType = {
+  ...TileState,
   TIE: 2,
 } as const;
 
-export type Player = typeof Player[keyof typeof Player];
-export type State = typeof State[keyof typeof State];
-export type Winner = typeof Winner[keyof typeof Winner];
+export type PlayerType = typeof PlayerType[keyof typeof PlayerType];
+export type TileState = typeof TileState[keyof typeof TileState];
+export type WinnerType = typeof WinnerType[keyof typeof WinnerType];
 
 export interface IBoardState { 
-  winner: Winner;
+  winner: WinnerType;
   enabled: boolean;
 }
 
 export interface BoardState extends IBoardState {
-  board: State[][];
+  tiles: TileState[][];
 }  
 
 export interface UltBoardState extends IBoardState {
