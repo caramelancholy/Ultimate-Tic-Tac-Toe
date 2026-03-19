@@ -1,4 +1,4 @@
-import { type BoardState, WinnerType, TileState, type UltBoardState } from "../types/Board";
+import { type BoardState, WinnerType, TileState, type UltBoardState, PlayerType } from "../types/Board";
 
 export const checkWinner = (b: BoardState["tiles"] | WinnerType[][]): WinnerType => {
   //Check Straights
@@ -34,4 +34,58 @@ export const generateEmptyUltBoardState = (): UltBoardState => {
     winner: WinnerType.NONE,
     enabled: true
   }
+}
+
+export const handleMove = (board: BoardState, player: PlayerType, x: number, y: number, boardStateChangeHandler: (board: BoardState, x: number, y: number) => void) => {
+  //Guard cases
+  if(!board.enabled) return false; //Check board is enabled
+  if(x > 2 || y > 2) return false; //Check coordinates are within bounds
+  if(board.tiles[y][x] !== TileState.NONE) return false; //Check move is being played into an empty space
+
+  //Update state
+  const newTiles = [...board.tiles];
+  newTiles[y][x] = player;
+  const newWinner = checkWinner(newTiles);
+  const newEnabled = newWinner === WinnerType.NONE;
+
+  boardStateChangeHandler({
+      tiles: newTiles,
+      winner: newWinner,
+      enabled: newEnabled
+    }, x, y
+  );
+
+  return true;
+} 
+
+export const updateBoardEnabling = (boards: BoardState[][], x: number, y: number): void => {
+  if(boards[y][x].winner == WinnerType.NONE) {
+    boards.forEach((row, _y) => row.forEach((board, _x) => board.enabled = (x == _x && y == _y)))
+  } else {
+    boards.forEach((row) => row.forEach((board) => board.enabled = board.winner == WinnerType.NONE))
+  }
+}
+
+export const handleBoardStateChange = (ultBoardState: UltBoardState, boardState: BoardState, move_x: number, move_y: number, board_x: number, board_y: number, ultBoardStateChangeHandler: (ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void) => { 
+  let newBoards = [...ultBoardState.boards];
+  newBoards[board_y][board_x] = boardState;
+  const newWinner = checkWinner(newBoards.map(row => row.map(board => board.winner)));
+  let newEnabled = false;
+
+  if(newWinner == WinnerType.NONE) {
+    newEnabled = true;
+    updateBoardEnabling(newBoards, move_x, move_y);
+  }
+
+  ultBoardStateChangeHandler(
+    {
+      boards: newBoards,
+      winner: newWinner,
+      enabled: newEnabled
+    }, 
+    board_x,
+    board_y,
+    move_x,
+    move_y
+  )
 }

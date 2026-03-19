@@ -109,4 +109,9 @@ svg {
   .menu {
     background-color: #eae3e3;
   }
+
+  .tileHover:hover {
+    background-color: rgb(0, 0, 0, 0.05);
+    border-radius: 5px;
+  }
 }

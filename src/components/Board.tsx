@@ -1,24 +1,7 @@
-/* ### Board Component ###
-  props:
-  - boardState: {
-      board: 2d array,
-      enabled: bool,
-      winner: null | bool
-  } 
-  - boardStateChangeHandler: (state: boardState) =>  coid
-
-  methods:
-  - handleMove: (x: int, y: int) => void
-    - Check enabled state
-    - Validate coordinates & move position
-    - Check and update win state
-
-*/
-
 import { PlayerType, TileState, WinnerType, type BoardState } from "../types/Board";
 import Grid from "./Grid";
 import Tile from "./Tile";
-import { checkWinner } from "../utils/utils.tsx";
+import { checkWinner, handleMove } from "../utils/utils.tsx";
 import Overlay from "./Overlay.tsx";
 
 type BoardProps = {
@@ -28,30 +11,10 @@ type BoardProps = {
 }
 
 export const Board = (props: BoardProps) => {
-  const { player, boardStateChangeHandler } = props;
+  const { boardState, player, boardStateChangeHandler } = props;
   const { tiles, winner, enabled } = props.boardState;
 
-  const handleMove = (x: number, y: number) => {
-    //Guard cases
-    if(!enabled) return; //Check board is enabled
-    if(x > 2 || y > 2) return; //Check coordinates are within bounds
-    if(tiles[y][x] !== TileState.NONE) return; //Check move is being played into an empty space
-
-    //Update state
-    const newTiles = [...tiles];
-    newTiles[y][x] = player;
-    const newWinner = checkWinner(newTiles);
-    const newEnabled = newWinner === WinnerType.NONE;
-
-    boardStateChangeHandler({
-        tiles: newTiles,
-        winner: newWinner,
-        enabled: newEnabled
-      }, x, y
-    )
-  } 
-
-  const tileComponents = tiles.map((row, y) => row.map((state, x) => <Tile value={state} enabled={enabled} x={x} y={y} tileClickHandler={handleMove}/>));
+  const tileComponents = tiles.map((row, y) => row.map((state, x) => <Tile value={state} enabled={enabled} x={x} y={y} tileClickHandler={() => handleMove(boardState, player, x, y, boardStateChangeHandler)}/>));
 
   return(
     <div className="flexContainer" style={{position: 'relative'}}>
