@@ -43,7 +43,7 @@ export const handleMove = (board: BoardState, player: PlayerType, x: number, y: 
   if(board.tiles[y][x] !== TileState.NONE) return false; //Check move is being played into an empty space
 
   //Update state
-  const newTiles = [...board.tiles];
+  const newTiles = board.tiles.map(row => [...row]);
   newTiles[y][x] = player;
   const newWinner = checkWinner(newTiles);
   const newEnabled = newWinner === WinnerType.NONE;
@@ -67,7 +67,7 @@ export const updateBoardEnabling = (boards: BoardState[][], x: number, y: number
 }
 
 export const handleBoardStateChange = (ultBoardState: UltBoardState, boardState: BoardState, move_x: number, move_y: number, board_x: number, board_y: number, ultBoardStateChangeHandler: (ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void) => { 
-  let newBoards = [...ultBoardState.boards];
+  const newBoards = [...ultBoardState.boards];
   newBoards[board_y][board_x] = boardState;
   const newWinner = checkWinner(newBoards.map(row => row.map(board => board.winner)));
   let newEnabled = false;

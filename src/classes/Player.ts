@@ -24,22 +24,19 @@ export class LocalPlayer extends Player {
 }
 
 export class OnlinePlayer extends Player {
-  ultBoardState: UltBoardState;
-  connState: ConnectionState;
+  ultBoardStateRef: React.RefObject<UltBoardState>;
   sendData: (data: any) => void;
   ultBoardStateChangeHandler: (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void;
 
   constructor(
     playerType: PlayerType, 
-    connState: ConnectionState, 
-    ultBoardState: UltBoardState, 
+    ultBoardStateRef: React.RefObject<UltBoardState>, 
     sendData: (data: any) => void, 
     ultBoardStateChangeHandler: (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void 
   ) {
     super(true, playerType);
-    this.connState = connState; 
     this.sendData = sendData;
-    this.ultBoardState = ultBoardState;
+    this.ultBoardStateRef = ultBoardStateRef;
     this.ultBoardStateChangeHandler = ultBoardStateChangeHandler;
   }
 
@@ -61,11 +58,11 @@ export class OnlinePlayer extends Player {
     switch(action) {
       case ConnectionActions.MOVE:
         handleMove(
-          this.ultBoardState.boards[command?.board_y][command?.board_x],
+          this.ultBoardStateRef.current.boards[command?.board_y][command?.board_x],
           this.playerType,
           command?.move_x,
           command?.move_y,
-          (board, move_x, move_y) => handleBoardStateChange(this.ultBoardState, board, move_x, move_y, command?.move_x, command?.move_y, this.ultBoardStateChangeHandler)
+          (board, move_x, move_y) => handleBoardStateChange(this.ultBoardStateRef.current, board, move_x, move_y, command?.board_x, command?.board_y, this.ultBoardStateChangeHandler)
         );
         break;
     }

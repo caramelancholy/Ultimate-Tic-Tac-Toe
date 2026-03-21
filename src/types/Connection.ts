@@ -11,5 +11,11 @@ export const ConnectionActions = {
   DISCONNECT: 2
 } as const;
 
+export const ConnectionSource = {
+  LOCAL: 0,
+  REMOTE: 1
+} as const;
+
 export type ConnectionState = typeof ConnectionState[keyof typeof ConnectionState];
 export type ConnectionActions = typeof ConnectionActions[keyof typeof ConnectionActions];
+export type ConnectionSource = typeof ConnectionSource[keyof typeof ConnectionSource];

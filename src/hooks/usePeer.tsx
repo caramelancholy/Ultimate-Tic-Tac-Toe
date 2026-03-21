@@ -1,15 +1,15 @@
 import Peer, { type DataConnection } from "peerjs";
 import { useState, useEffect, useRef } from "react";
-import { ConnectionState } from "../types/Connection";
+import { ConnectionSource, ConnectionState } from "../types/Connection";
 import { PlayerType } from "../types/Board";
 
-const usePeer = (onConnOpen: (conn: DataConnection) => void) => {
+const usePeer = (onConnOpen: (conn: DataConnection, sendData: (data: any) => void, source: ConnectionSource) => void) => {
   const peerInstance = useRef<Peer | null>(null);
   const connection = useRef<DataConnection | undefined>(undefined);
   const [peerId, setPeerId] = useState<string>('');
   const [connState, setConnState] = useState<ConnectionState>(ConnectionState.INITIALISING);
 
-  const sendData = (data: any) => { connection.current?.send(data); }
+  const sendData = (data: unknown) => { connection.current?.send(data); }
 
   const connectId = (id: string) => { 
     const conn = peerInstance.current?.connect(id, {
@@ -20,15 +20,14 @@ const usePeer = (onConnOpen: (conn: DataConnection) => void) => {
     connection.current = conn;
 
     if(conn) {
-      setupConnection(conn);
+      setupConnection(conn, ConnectionSource.LOCAL);
     }
 
   }
 
-  const setupConnection = (conn: DataConnection) => {
-    console.log(conn);
+  const setupConnection = (conn: DataConnection, source: ConnectionSource) => {
     conn.on('open', () => {
-      onConnOpen(conn);
+      onConnOpen(conn, sendData, source);
       setConnState(ConnectionState.CONNECTED);
     })
     conn.on('close', () => {
@@ -38,8 +37,7 @@ const usePeer = (onConnOpen: (conn: DataConnection) => void) => {
   }
 
   useEffect(() => {
-    console.log(onConnOpen);
-    const peer = new Peer({ debug: 3 })
+    const peer = new Peer({debug: 3});
     
     peer.on('open', (id) => {
       setPeerId(id);
@@ -47,7 +45,8 @@ const usePeer = (onConnOpen: (conn: DataConnection) => void) => {
     })
 
     peer.on('connection', (conn) => {
-      setupConnection(conn);
+      setupConnection(conn, ConnectionSource.REMOTE);
+      connection.current = conn;
     });
 
     peer.on('close', () => { 

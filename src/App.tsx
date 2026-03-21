@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import './App.css'
 import { PlayerType, WinnerType, type UltBoardState } from './types/Board';
 import UltBoard from './components/UltBoard';
@@ -8,8 +8,8 @@ import { generateEmptyUltBoardState } from './utils/utils';
 import MenuSurface from './components/MenuSurface';
 import usePeer from './hooks/usePeer';
 import type { DataConnection } from 'peerjs';
-import { ConnectionState } from './types/Connection';
-
+import { ConnectionSource, ConnectionState } from './types/Connection';
+ 
 function App() {
   // ======== STATE ========
   const [ultBoardState, setUltBoardState] = useState<UltBoardState>(generateEmptyUltBoardState());
@@ -17,13 +17,24 @@ function App() {
   const [turn, setTurn] = useState<boolean>(false);
   const [gameMode, setGameMode] = useState<GameMode>(GameMode.NONE);
   const [gameState, setGameState] = useState<GameState>(GameState.START);
+ 
+  // Refs so that callbacks constructed once (e.g. inside OnlinePlayer) always
+  // read the latest players/turn rather than stale closure values from the
+  // render in which the OnlinePlayer was constructed.
+  const ultBoardStateRef = useRef<UltBoardState>(ultBoardState);
+  const playersRef = useRef<Player[]>(players);
+  const turnRef = useRef<boolean>(turn);
 
+ 
   // ======== FUNCTIONS ========
+ 
+  // No longer accepts players/turn as arguments — reads from refs instead,
+  // so it is safe to pass as a stable reference into OnlinePlayer.
   const handleUltBoardStateChange = (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => { 
     handleMove(_ultBoardState, board_x, board_y, move_x, move_y);
     setUltBoardState(_ultBoardState);
   }
-
+ 
   const handleGameModeButton = (gameMode: GameMode) => {
     setGameMode(gameMode);
     if(gameMode == GameMode.LOCAL) initialiseLocalGame();
@@ -35,7 +46,7 @@ function App() {
       }
     }
   }
-
+ 
   const handleRestart = () => {
     setUltBoardState(generateEmptyUltBoardState());
     setPlayers([]);
@@ -43,50 +54,59 @@ function App() {
     setGameMode(GameMode.NONE);
     setGameState(GameState.START);
   }
-
+ 
   const handleMove = (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => {
-    setTurn(!turn);
-    players[Number(!turn)].notifyMove(board_x, board_y, move_x, move_y);
+    // Read from refs — guaranteed to be the latest values even when called
+    // from inside a stale OnlinePlayer closure.
+    const currentPlayers = playersRef.current;
+    const currentTurn = turnRef.current;
+    currentPlayers[Number(!currentTurn)]?.notifyMove(board_x, board_y, move_x, move_y);
     if(_ultBoardState.winner != WinnerType.NONE) {
       setGameState(GameState.END);
     }
+    setTurn(!currentTurn);
   }
 
-  const onConnOpen = (conn: DataConnection) => {
-    const onlineOpponent = new OnlinePlayer(conn.metadata?.player, connState, ultBoardState, sendData, handleUltBoardStateChange);
+  const onConnOpen = (conn: DataConnection, sendData: (data: unknown) => void, source: ConnectionSource) => {
+    const onlineOpponent = new OnlinePlayer(Number(!source) as PlayerType, ultBoardStateRef, sendData, handleUltBoardStateChange);
     conn.on('data', (data) => {
-      onlineOpponent.recieveData(data);
       console.log(data);
+      onlineOpponent.recieveData(data);
     });
-    console.log(onlineOpponent);
-    console.log(conn);
-    initialiseOnlineGame(conn.metadata?.player!, onlineOpponent);
+    console.log(conn.metadata);
+    initialiseOnlineGame(onlineOpponent, source);
   }
-
+ 
   const initialiseLocalGame = () => {
     setPlayers([new LocalPlayer(PlayerType.NAUGHTS), new LocalPlayer(PlayerType.CROSSES)]);
     setGameState(GameState.INPLAY);
   }
-
-  const initialiseOnlineGame = (localPlayerType: PlayerType, onlineOpponent: OnlinePlayer) => {
-    setPlayers([new LocalPlayer(localPlayerType), onlineOpponent]);
+ 
+  const initialiseOnlineGame = (onlineOpponent: OnlinePlayer, source: ConnectionSource) => {
+    const newPlayers: Player[] = [];
+    newPlayers[source] = new LocalPlayer(source);
+    newPlayers[Math.abs(source - 1)] = onlineOpponent;
+    setPlayers(newPlayers);
     setGameState(GameState.INPLAY);
   }
-
+ 
   // ======== HOOKS ========
   const { peerId, connState, connectId, sendData } = usePeer(onConnOpen);
-
+ 
   // ======== EFFECTS ========
-
-
+  useEffect(() => {
+    ultBoardStateRef.current = ultBoardState;
+    playersRef.current = players;
+    turnRef.current = turn;
+  },[ultBoardState, players, turn]);
+ 
   // ======== FLOW CONTROL ========
-  // Menus
-  let winnerMessage = 
+  const winnerMessage = 
     ultBoardState.winner == WinnerType.TIE ? 'Its a tie!' :
     ultBoardState.winner == WinnerType.NAUGHTS ? 'Naughts wins!' : 'Crosses wins!';
-
+ 
   let menuContent: ReactNode;
-
+ 
   switch(gameState) {
     case GameState.START:
       menuContent = <> 
@@ -108,10 +128,15 @@ function App() {
       menuContent = <></>
       break;
   }
-
+ 
   return (
     <>
-      <UltBoard ultBoardState={ultBoardState} player={players[Number(turn)]?.playerType ?? PlayerType.NAUGHTS} locked={players[Number(turn)]?.locked ?? false} ultBoardStateChangeHandler={handleUltBoardStateChange}/>
+      <UltBoard 
+        ultBoardState={ultBoardState} 
+        player={players[Number(turn)]?.playerType ?? PlayerType.NAUGHTS} 
+        locked={players[Number(turn)]?.locked ?? false} 
+        ultBoardStateChangeHandler={handleUltBoardStateChange}
+      />
       {gameState != GameState.INPLAY && 
         <MenuSurface>
           {menuContent}
@@ -120,5 +145,5 @@ function App() {
     </>
   );
 }
-
+ 
 export default App;
