@@ -8,7 +8,7 @@ import { generateEmptyUltBoardState } from './utils/utils';
 import MenuSurface from './components/MenuSurface';
 import usePeer from './hooks/usePeer';
 import type { DataConnection } from 'peerjs';
-import { ConnectionSource, ConnectionState } from './types/Connection';
+import { ConnectionSource, ConnectionState, type ConnectionData } from './types/Connection';
  
 function App() {
   // ======== STATE ========
@@ -38,13 +38,6 @@ function App() {
   const handleGameModeButton = (gameMode: GameMode) => {
     setGameMode(gameMode);
     if(gameMode == GameMode.LOCAL) initialiseLocalGame();
-    if(gameMode == GameMode.ONLINE) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      if(id) {
-        connectId(id);
-      }
-    }
   }
  
   const handleRestart = () => {
@@ -67,14 +60,33 @@ function App() {
     setTurn(!currentTurn);
   }
 
-  const onConnOpen = (conn: DataConnection, sendData: (data: unknown) => void, source: ConnectionSource) => {
+  const handleJoinId = (connectId: (id: string) => void) => {
+    const inputElement = document.getElementById('joinId') as HTMLInputElement;
+    const value = inputElement?.value;
+    if(value) {
+      connectId(value);
+    }
+  }
+
+  const onPeerOpen = (connectId: (id: string) => void) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    if(id) {
+      setGameMode(GameMode.ONLINE);
+      connectId(id);
+    }
+  }
+
+  const onConnOpen = (conn: DataConnection, sendData: (data: ConnectionData) => void, source: ConnectionSource) => {
     const onlineOpponent = new OnlinePlayer(Number(!source) as PlayerType, ultBoardStateRef, sendData, handleUltBoardStateChange);
     conn.on('data', (data) => {
-      console.log(data);
-      onlineOpponent.recieveData(data);
+      onlineOpponent.recieveData(data as ConnectionData);
     });
-    console.log(conn.metadata);
     initialiseOnlineGame(onlineOpponent, source);
+  }
+
+  const onConnClose = () => {
+    handleRestart();
   }
  
   const initialiseLocalGame = () => {
@@ -89,9 +101,17 @@ function App() {
     setPlayers(newPlayers);
     setGameState(GameState.INPLAY);
   }
+
+  const copyInputValue = (id: string) => {
+    const inputElement = document.getElementById(id) as HTMLInputElement;
+    const value = inputElement?.value;
+    if(value) {
+      navigator.clipboard.writeText(value);
+    }
+  }
  
   // ======== HOOKS ========
-  const { peerId, connState, connectId, sendData } = usePeer(onConnOpen);
+  const { peerId, connState, connectId } = usePeer(onPeerOpen, onConnOpen, onConnClose);
  
   // ======== EFFECTS ========
   useEffect(() => {
@@ -109,13 +129,33 @@ function App() {
  
   switch(gameState) {
     case GameState.START:
-      menuContent = <> 
-        <h1>Ultimate Tic Tac Toe</h1>
-        <h2>Select your game mode</h2>
-        <h2>{connState == ConnectionState.INITIALISING ? '...' : peerId}</h2>
-        <button onClick={() => handleGameModeButton(GameMode.LOCAL)}>Local &#x1F3E0;</button>
-        <button onClick={() => handleGameModeButton(GameMode.ONLINE)}>Online &#x1F310;</button>
-      </>
+      switch(gameMode) {
+        case GameMode.NONE:
+          menuContent = <> 
+            <h1>Ultimate Tic Tac Toe</h1>
+            <h2>Select your game mode</h2>
+            <button onClick={() => handleGameModeButton(GameMode.LOCAL)}>Local &#x1F3E0;</button>
+            <button onClick={() => handleGameModeButton(GameMode.ONLINE)}>Online &#x1F310;</button>
+          </>
+          break;
+        case GameMode.ONLINE:
+          menuContent = <>
+            {connState != ConnectionState.INITIALISING && <>
+              <div>
+                <button onClick={() => copyInputValue('connUrl')}>Copy URL &#x1F517;</button>
+                <input type='text' id='connUrl' value={`${window.location.href}?id=${peerId}`} readOnly/>
+              </div>
+              <div>
+                <button onClick={() => copyInputValue('connId')}>Copy ID &#x1F194;</button>
+                <input type='text' id='connId' value={peerId} readOnly/>
+              </div>
+              <div>
+                <button onClick={() => handleJoinId(connectId)}>Join ID &#x1F4F2;</button>
+                <input type="text" id="joinId"/>
+              </div>
+            </>}
+          </>
+      }
       break;
     case GameState.END:
       menuContent = <>

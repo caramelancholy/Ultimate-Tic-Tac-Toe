@@ -1,9 +1,8 @@
 import Peer, { type DataConnection } from "peerjs";
 import { useState, useEffect, useRef } from "react";
-import { ConnectionSource, ConnectionState } from "../types/Connection";
-import { PlayerType } from "../types/Board";
+import { ConnectionSource, ConnectionState, type ConnectionData } from "../types/Connection";
 
-const usePeer = (onConnOpen: (conn: DataConnection, sendData: (data: any) => void, source: ConnectionSource) => void) => {
+const usePeer = (onPeerOpen: (connectId: (id: string) => void) => void, onConnOpen: (conn: DataConnection, sendData: (data: ConnectionData) => void, source: ConnectionSource) => void, onConnClose: () => void) => {
   const peerInstance = useRef<Peer | null>(null);
   const connection = useRef<DataConnection | undefined>(undefined);
   const [peerId, setPeerId] = useState<string>('');
@@ -12,10 +11,7 @@ const usePeer = (onConnOpen: (conn: DataConnection, sendData: (data: any) => voi
   const sendData = (data: unknown) => { connection.current?.send(data); }
 
   const connectId = (id: string) => { 
-    const conn = peerInstance.current?.connect(id, {
-      metadata: {
-        player: PlayerType.CROSSES
-    }}); 
+    const conn = peerInstance.current?.connect(id); 
 
     connection.current = conn;
 
@@ -31,15 +27,21 @@ const usePeer = (onConnOpen: (conn: DataConnection, sendData: (data: any) => voi
       setConnState(ConnectionState.CONNECTED);
     })
     conn.on('close', () => {
+      console.log('closing connection');
+      onConnClose();
       setConnState(ConnectionState.DISCONNECTED);  
     });
+    conn.on('error', (err) => {
+      console.log(err);
+    })
     
   }
 
   useEffect(() => {
-    const peer = new Peer({debug: 3});
+    const peer = new Peer();
     
     peer.on('open', (id) => {
+      onPeerOpen(connectId);
       setPeerId(id);
       setConnState(ConnectionState.DISCONNECTED);
     })
@@ -54,9 +56,13 @@ const usePeer = (onConnOpen: (conn: DataConnection, sendData: (data: any) => voi
       setConnState(ConnectionState.INITIALISING); 
     });
 
+    const handleBeforeUnload = () => { connection.current?.close() }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     peerInstance.current = peer;
 
-    return () => { peer?.destroy(); }
+    return () => { peer?.destroy(); connection.current?.close(); window.removeEventListener('beforeunload', handleBeforeUnload); }
 
   },[]);
 

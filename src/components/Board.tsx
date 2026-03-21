@@ -1,7 +1,7 @@
-import { PlayerType, TileState, WinnerType, type BoardState } from "../types/Board";
+import { PlayerType, type BoardState } from "../types/Board";
 import Grid from "./Grid";
 import Tile from "./Tile";
-import { checkWinner, handleMove } from "../utils/utils.tsx";
+import { handleMove } from "../utils/utils.tsx";
 import Overlay from "./Overlay.tsx";
 
 type BoardProps = {

@@ -1,5 +1,5 @@
 import type { PlayerType, UltBoardState } from "../types/Board";
-import { ConnectionActions, ConnectionState } from "../types/Connection";
+import { ConnectionAction, type ConnectionData } from "../types/Connection";
 import { handleBoardStateChange, handleMove } from "../utils/utils";
 
 export abstract class Player {
@@ -25,13 +25,13 @@ export class LocalPlayer extends Player {
 
 export class OnlinePlayer extends Player {
   ultBoardStateRef: React.RefObject<UltBoardState>;
-  sendData: (data: any) => void;
+  sendData: (data: ConnectionData) => void;
   ultBoardStateChangeHandler: (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void;
 
   constructor(
     playerType: PlayerType, 
     ultBoardStateRef: React.RefObject<UltBoardState>, 
-    sendData: (data: any) => void, 
+    sendData: (data: ConnectionData) => void, 
     ultBoardStateChangeHandler: (_ultBoardState: UltBoardState, board_x: number, board_y: number, move_x: number, move_y: number) => void 
   ) {
     super(true, playerType);
@@ -42,7 +42,7 @@ export class OnlinePlayer extends Player {
 
   notifyMove(board_x: number, board_y: number, move_x: number, move_y: number): void {
       this.sendData({
-        action: ConnectionActions.MOVE,
+        action: ConnectionAction.MOVE,
         command: {
           board_x,
           board_y,
@@ -52,17 +52,17 @@ export class OnlinePlayer extends Player {
       })
   }
 
-  recieveData(data: any) {
+  recieveData(data: ConnectionData) {
     const action = data?.action;
     const command = data?.command;
     switch(action) {
-      case ConnectionActions.MOVE:
+      case ConnectionAction.MOVE:
         handleMove(
-          this.ultBoardStateRef.current.boards[command?.board_y][command?.board_x],
+          this.ultBoardStateRef.current.boards[command?.board_y as number][command?.board_x as number],
           this.playerType,
-          command?.move_x,
-          command?.move_y,
-          (board, move_x, move_y) => handleBoardStateChange(this.ultBoardStateRef.current, board, move_x, move_y, command?.board_x, command?.board_y, this.ultBoardStateChangeHandler)
+          command?.move_x as number,
+          command?.move_y as number,
+          (board, move_x, move_y) => handleBoardStateChange(this.ultBoardStateRef.current, board, move_x, move_y, command?.board_x as number, command?.board_y as number, this.ultBoardStateChangeHandler)
         );
         break;
     }
